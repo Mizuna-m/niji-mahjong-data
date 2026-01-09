@@ -1,0 +1,29 @@
+name: Pull data repo to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: pull-to-vps
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull on VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -eux
+            cd ~/niji-mahjong/repo
+            git fetch origin main
+            git reset --hard origin/main
+            # 取り込みは niji-app の watcher が拾う想定
+            # 念のためファイル一覧を表示（ログで確認しやすい）
+            ls -la data | tail -n +1 | head -n 50
